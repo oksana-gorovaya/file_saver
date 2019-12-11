@@ -1,19 +1,35 @@
-from flask import Flask, render_template
-
+import cgi
+from BaseHTTPServer import BaseHTTPRequestHandler, HTTPServer
 from InputSaver import InputSaver
 
-app = Flask(__name__)
 
+class HttpProcessor(BaseHTTPRequestHandler):
+   def _set_headers(self):
+       self.send_response(200)
+       self.send_header('Content-type', 'text/html')
+       self.end_headers()
 
-@app.route('/')
-def show_task():
-    return render_template("task.html")
+   def do_GET(self):
+       self._set_headers()
+       f = open('./templates/task.html')
+       self.wfile.write(f.read())
 
+   def do_POST(self):
+       try:
+           form = cgi.FieldStorage(
+               fp=self.rfile,
+               headers=self.headers,
+               environ={
+                   'REQUEST_METHOD': 'POST',
+                   'CONTENT_TYPE': self.headers['Content-Type'],
+               }
+           )
 
-@app.route('/', methods=['POST'])
-def save_input():
-    return InputSaver().save_data()
+           return InputSaver(form).save_data()
 
+       except Exception as e:
+           print e
 
-if __name__ == '__main__':
-    app.run(port=8090)
+serv = HTTPServer(("localhost",8090),HttpProcessor)
+serv.serve_forever()
+

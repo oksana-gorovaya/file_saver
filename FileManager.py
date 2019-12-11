@@ -1,11 +1,10 @@
 import os
-from werkzeug.utils import secure_filename
 
 
 class FileManager:
-    def save(self, file, folder):
-        filename = secure_filename(file.filename)
-        file.save(os.path.join(folder, filename))
+    def save(self, file):
+        fn = os.path.basename(file.filename)
+        open('./files/' + fn, 'wb').write(file.file.read())
 
         return True
 
